@@ -454,10 +454,19 @@ abstract class BasePageLogic extends GetxController with Scroll2TopLogicMixin {
   }
 
   List<Gallery> _filterByMinimumRating(List<Gallery> galleries) {
-    if (state.searchConfig.minimumRating <= 1) {
+    if (state.searchConfig.minimumRating <= 1 || galleries.isEmpty) {
       return galleries;
     }
-    return galleries.where((g) => g.rating >= state.searchConfig.minimumRating).toList();
+    List<Gallery> filteredGalleries =
+        galleries.where((g) => g.rating >= state.searchConfig.minimumRating).toList();
+    if (filteredGalleries.isNotEmpty) {
+      return filteredGalleries;
+    } else {
+      // If all galleries are filtered out by the minimum rating, keep the first
+      // one (marked) to indicate the filter state. Otherwise the UI would keep
+      // loading subsequent pages and appear stuck in a loading state.
+      return galleries.sublist(0, 1).map((g) => g..blockedByLocalRules = true).toList();
+    }
   }
 
   Future<void> _translateGalleryTagsIfNeeded(List<Gallery> galleries) async {
